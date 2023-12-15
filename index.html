@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブラックジャックもどき</title>
+    <style>
+    body, button {
+        font-size: 32px;
+        user-select: none;
+    }
+    .name {
+        display: inline-block;
+        width: 150px;
+        text-align: center;
+    }
+    #dealer-card-list, #player-card-list {
+        display: inline-block;
+    }
+    #result, #hit, #stand {
+        display: inline-block;
+        margin-right: 8px;
+    }
+    #next {
+        display: block;
+    }
+    </style>
+</head>
+<body>
+    <div id="history">WIN：0 / LOSE：0 / DRAW：0</div>
+    <div>
+        <div class="name">DEALER</div>
+        <div id="dealer-card-list"></div>
+    </div>
+    <div>
+        <div class="name">PLAYER</div>
+        <div id="player-card-list"></div>
+    </div>
+    <div id="result"></div><button id="hit">HIT</button><button id="stand">STAND</button>
+    <button id="next">NEXT</button>
+
+    <script>
+    const domHistory = document.querySelector("#history");
+    const domDealerCardList = document.querySelector("#dealer-card-list");
+    const domPlayerCardList = document.querySelector("#player-card-list");
+    const domResult = document.querySelector("#result");
+    const domHit = document.querySelector("#hit");
+    const domStand = document.querySelector("#stand");
+    const domNext = document.querySelector("#next");
+    let winCount = 0, loseCount = 0, drawCount = 0;
+    let cardList = [];
+    let dealerCardList = [];
+    let playerCardList = [];
+
+    /// UI更新処理、シーン処理
+
+    function updateUICardList(isGameOver = false) {
+        if (isGameOver) {
+            domDealerCardList.textContent = dealerCardList.map(card => card.suit + card.numberName).join(" ");
+        }
+        else {
+            domDealerCardList.textContent = dealerCardList[0].suit + dealerCardList[0].numberName;
+            for (let i = 0; i < dealerCardList.length - 1; i++) {
+                domDealerCardList.textContent += " ？";
+            }
+        }
+        domPlayerCardList.textContent = playerCardList.map(card => card.suit + card.numberName).join(" ");
+    }
+
+    function gameStartScene() {
+        cardList = [];
+        for (const suit of "♠♣♢♡") {
+            for (const numberName of "A23456789TJQK") {
+                cardList.push({suit, numberName});
+            }
+        }
+        dealerCardList = [hit(), hit()];
+        playerCardList = [hit(), hit()];
+
+        updateUICardList();
+        domResult.style.display = "none";
+        domHit.style.display = "";
+        domStand.style.display = "";
+        domNext.style.display = "none";
+    }
+
+    function gameOverScene() {
+        const playerSum = calcSum(playerCardList);
+        const dealerSum = calcSum(dealerCardList);
+        let result = "";
+
+        // バストは強制敗北
+        if (playerSum > 21) {
+            loseCount++;
+            result = "LOSE";
+        }
+        else if (dealerSum > 21) {
+            winCount++;
+            result = "WIN";
+        }
+        else if (playerSum === 21 && dealerSum === 21) {
+            if (dealerCardList.length === 2 && playerCardList.length > 2) {
+                loseCount++;
+                result = "LOSE";
+            }
+            else {
+                drawCount++;
+                result = "DRAW";
+            }
+        }
+        else if (playerSum > dealerSum) {
+            winCount++;
+            result = "WIN";
+        }
+        else if (playerSum < dealerSum) {
+            loseCount++;
+            result = "LOSE";
+        }
+        else {
+            drawCount++;
+            result = "DRAW";
+        }
+
+        updateUICardList(true);
+        domResult.style.display = "";
+        let displayPlayerSum = playerSum === 21 && playerCardList.length === 2 ? "NATURAL21" : playerSum;
+        let displayDealerSum = dealerSum === 21 && dealerCardList.length === 2 ? "NATURAL21" : dealerSum;
+        domResult.textContent = `PLAYER：${displayPlayerSum}, DEALER：${displayDealerSum} / ${result}`;
+        domHistory.textContent = `WIN：${winCount} / LOSE：${loseCount} / DRAW：${drawCount}`;
+        domHit.style.display = "none";
+        domStand.style.display = "none";
+        domNext.style.display = "";
+    }
+
+    /// ビジネスロジック定義
+
+    function calcSum(cardList) {
+        let aceCount = 0;
+        let sum = 0;
+        for (const card of cardList) {
+            if (card.numberName === "A") {
+                aceCount++;
+            }
+            else if ("TJQK".includes(card.numberName)) {
+                sum += 10;
+            }
+            else {
+                sum += Number(card.numberName);
+            }
+        }
+        // 「♠A ♣A ♢A ♡A ♠8 ♠9」みたいなケースがあるのでエースは最後に足す
+        if (sum === 0 && aceCount === 4) {
+            return 4;
+        }
+        for (let i = 0; i < aceCount; i++) {
+            sum += sum + 11 <= 21 ? 11 : 1;
+        }
+        return sum;
+    }
+
+    function hit() {
+        const index = Math.floor(Math.random() * cardList.length);
+        const card = cardList[index];
+        cardList.splice(index, 1);
+        return card;
+    }
+
+    function dealerTurn(isPlayerStand = false) {
+        if (calcSum(dealerCardList) >= 17) {
+            return;
+        }
+        dealerCardList.push(hit());
+        if (isPlayerStand) {
+            dealerTurn(true);
+        }
+    }
+
+    /// イベント定義
+
+    domHit.onclick = () => {
+        playerCardList.push(hit());
+        updateUICardList();
+
+        if (calcSum(playerCardList) > 21) {
+            gameOverScene();
+        }
+        else {
+            dealerTurn();
+        }
+    };
+
+    domStand.onclick = () => {
+        dealerTurn(true);
+        gameOverScene();
+    };
+
+    domNext.onclick = () => {
+        gameStartScene();
+    };
+
+    /// ゲーム開始
+    gameStartScene();
+    </script>
+</body>
+</html>
