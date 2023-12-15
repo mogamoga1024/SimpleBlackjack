@@ -1,0 +1,2 @@
+# SimpleBlackjack
+超シンプルなブラックジャック
