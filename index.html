@@ -149,8 +149,13 @@
             }
         }
         // 「♠A ♣A ♢A ♡A ♠8 ♠9」みたいなケースがあるのでエースは最後に足す
-        if (sum === 0 && aceCount === 4) {
-            return 4;
+        if (sum === 0) {
+            if (aceCount === 4) {
+                return 1 + 1 + 1 + 1;
+            }
+            else if (aceCount === 3) {
+                return 11 + 1 + 1;
+            }
         }
         for (let i = 0; i < aceCount; i++) {
             sum += sum + 11 <= 21 ? 11 : 1;
