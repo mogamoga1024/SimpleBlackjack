@@ -184,14 +184,15 @@
 
     domHit.onclick = () => {
         playerCardList.push(hit());
-        updateUICardList();
 
         if (calcSum(playerCardList) > 21) {
             gameOverScene();
+            return;
         }
         else {
             dealerTurn();
         }
+        updateUICardList();
     };
 
     domStand.onclick = () => {
