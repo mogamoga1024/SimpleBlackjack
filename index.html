@@ -123,8 +123,8 @@
 
         updateUICardList(true);
         domResult.style.display = "";
-        let displayPlayerSum = playerSum === 21 && playerCardList.length === 2 ? "NATURAL21" : playerSum;
-        let displayDealerSum = dealerSum === 21 && dealerCardList.length === 2 ? "NATURAL21" : dealerSum;
+        const displayPlayerSum = playerSum === 21 && playerCardList.length === 2 ? "NATURAL21" : playerSum;
+        const displayDealerSum = dealerSum === 21 && dealerCardList.length === 2 ? "NATURAL21" : dealerSum;
         domResult.textContent = `PLAYER：${displayPlayerSum}, DEALER：${displayDealerSum} / ${result}`;
         domHistory.textContent = `WIN：${winCount} / LOSE：${loseCount} / DRAW：${drawCount}`;
         domHit.style.display = "none";
