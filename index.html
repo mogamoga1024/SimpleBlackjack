@@ -143,11 +143,11 @@
     /// ビジネスロジック定義
 
     function calcSum(cardList) {
-        let aceCount = 0;
+        let maxAceCount = 0;
         let sum = 0;
         for (const card of cardList) {
             if (card.numberName === "A") {
-                aceCount++;
+                maxAceCount++;
             }
             else if ("TJQK".includes(card.numberName)) {
                 sum += 10;
@@ -158,8 +158,8 @@
         }
         // 「♠A ♣A ♢A ♡A ♠8 ♠9」みたいなケースがあるのでエースは最後に足す
         const tmpSum = sum;
-        for (let i = 1; i <= aceCount; i++) {
-            sum = tmpSum + 11 * (aceCount - i) + 1 * i;
+        for (let aceCount = 0; aceCount <= maxAceCount; aceCount++) {
+            sum = tmpSum + 11 * (maxAceCount - aceCount) + 1 * aceCount;
             if (sum <= 21) {
                 return sum;
             }
